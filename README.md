@@ -13,4 +13,4 @@ An alternative formatter
   2. Call fx(fmt) to get a format function for the specified format string.
      Add any functions using setFunction(name, function) to extend the available functions.
   3. Call the format function with any number of unnamed and named arguments.
-     A named argument is defined by the following object: { name: <name>, value: <value> }
+     A named argument is defined by the following object: { name: &lt;name&gt;, value: &lt;value&gt; }
