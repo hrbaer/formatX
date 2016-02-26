@@ -7,6 +7,7 @@
 
   Version history:
   0.1.0 09/02/2016
+  0.2.0 24/02/2016
 
   Usage
   1. Define a format string.
@@ -14,6 +15,7 @@
      $ Prefix used to specify a variable of your choice
      # Prefix used to denote a number
      & Prefix for a string
+     @ JSON
      _ Function prefix
      > Output of the current value
      % If you like to use comments
@@ -25,17 +27,22 @@
 
 (function(global) {
 
+  "use strict";
+
+  // Special characters
+  var sep = '|', // separates items
+      v_r = '$', // denotes variables
+      num = '#', // used for numbers
+      str = '&', // specifies string
+      jsn = '@', // introduces a JSON
+      fun = '_', // function start with an underbar
+      out = '>', // output the current value
+      com = '%'; // comment only
+
+
   var formatX = function(fmt) {
 
-    // Special characters
-    var sep = '|', // separates items
-        v_r = '$', // denotes variables
-        num = '#', // used for numbers
-        str = '&', // specifies string
-        jsn = '@', // introduces a JSON
-        fun = '_', // function start with an underbar
-        out = '>', // output the current value
-        com = '%'; // comment only
+    var ops;
 
     // Useful functions
     var functions = {
@@ -68,23 +75,22 @@
       fract: function(x) { return x - Math.trunc(x) },
       mins: function(x) { return Math.floor(60 * x) % 60 },
       secs: function(x) { return Math.floor(3600 * x) % 60 },
-      sign: function(x) { return Math.sign(x) + 1 },
+      sign: function(x) { return Math.sign(x) },
       clip: function(x, r) { return x < r[0] ? r[0] : x > r[1] ? r[1] : x },
       wrap: function(x, r) { var d = r[1] - r[0]; while (x < r[0]) { x += d }; while (x > r[1]) { x -= d }; return x },
       sum: function() { var args = Array.prototype.slice.call(arguments); return args.reduce(function(p, c) { return p + c }, 0) },
-      chars: function(a) { return new Array(a[1] + 1).join(a[0]) },
+      rep: function(s, n) { return Array(n).fill(s).join('') },
       array: function() { return Array.prototype.slice.call(arguments) },
+      parse: function(s) { return JSON.parse(s) },
       at: function(a, i) { return a[i] },
       right: function(x, t) { return (t + x).slice(-t.length) },
-      left: function(x, t) { return (x + t).slice(0, t.length) }
+      left: function(x, t) { return (x + t).slice(0, t.length) },
     };
-  
-    var ops;
-  
+
     // Parse the format specifier
     function parse() {
       var toks = fmt.split(sep);
-      ops = toks.map(function(tok) {
+      var ops = toks.map(function(tok) {
         var op;
         var c = tok.charAt(0);
         switch (c) {
@@ -105,36 +111,45 @@
           break;
         case out: // output
           op = { type: 'out' };
-          break;  
+          break;
         case com: // comment
           op = { type: 'com', text: tok.substr(1) };
           break;  
         default: // label
-          op = { type: 'lab', labs: tok.split(':') };
+          op = { type: 'lab', labs: tok.split('::') };
           break;
         }
         return op;
       });
+      return ops;
     };
-    if (fmt) { parse() }
+    if (fmt) { ops = parse() };
   
     var format = function() {
       
       var args = Array.prototype.slice.call(arguments);
       var stack = []; // holds the currently used values
       var store = {}; // stores named variables
-    
+      var keys;
+
+      format.getValue = function(key) {
+        return store[key];
+      };
+
       args.forEach(function(arg) {
-        if (arg.name && arg.name.charAt(0 === '$')) {
-          stack.push(arg.value);
-          store[arg.name] = arg.value;
+        if (arg.key && arg.key.charAt(0) === '$') {
+          store[arg.key] = arg.value;
+        }
+        else if ((keys = Object.keys(arg)) && keys.length === 1 && keys[0].charAt(0) === '$') {
+          var key = keys[0];
+          store[key] = arg[key];
         }
         else {
           stack.push(arg);
         }
       });
 
-      var s = ops.reduce(function(p, c) {
+      return ops.reduce(function(p, c, i) {
         var out = '';
         switch (c.type) {
         case 'var':
@@ -180,13 +195,12 @@
         return p + out;
       }, '');
 
-      return s;
     }
-  
-    // Add a new function
+    
+        // Add a new function
     format.setFunction = function(name, fun) {
       functions[name.substr(1)] = fun;
-    }
+    };
 
     // Test a function
     format.testFunction = function(name) {
