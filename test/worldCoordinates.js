@@ -1,7 +1,7 @@
 var X = require('../src/formatX.js');
 
-var latFmt = "%Format decimal latitude|$lat|_abs|$absdeg|_int|@[-90,90]|_clip|&  |_right|>>|°|$absdeg|_mins|&00|_right|>>|'|$lat|_sign| S:  : N";
-var lonFmt = "%Format decimal longitude|$lat|_abs|$absdeg|_int|@[-180,180]|_wrap|&   |_right|>>|°|$absdeg|_mins|&00|_right|>>|'|$lat|_sign| W:  : E";
+ var latFmt = "%Format decimal latitude|$lat|_abs|$absdeg|_int|@[-90,90]|_clip|&  |_right|>>|°|$absdeg|_mins|&00|_right|>>|'|$lat|_sign|#1|_add| |S:: ::N";
+ var lonFmt = "%Format decimal longitude|$lon|_abs|$absdeg|_int|@[-180,180]|_wrap|&   |_right|>>|°|$absdeg|_mins|&00|_right|>>|'|$lon|_sign|#1|_add| |W:: ::E";
 
 var fmtLat = X.formatX(latFmt);
 var fmtLon = X.formatX(lonFmt);
