@@ -8,6 +8,7 @@
   Version history:
   0.1.0 09/02/2016
   0.2.0 24/02/2016
+  0.3.0 03/03/2016
 
   Usage
   1. Define a format string.
