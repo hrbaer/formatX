@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>formatX Test</title>
+  <script src="src/formatX.js"></script>
+  <style>
+  body {
+    font-family: "Helvetica Neue", sans-serif;
+    margin: 50px;
+  }
+  #result {
+    background: #eee;
+    border-radius: 4px;
+  }
+  .text {
+    font-family: "Menlo", monospace;
+    font-size: 13px;
+    width: 100%;
+    min-height: 32px;
+    box-sizing: border-box;
+    padding: 8px;
+  }
+  </style>
+</head>
+<body>
+  <h1>formatX</h1>
+  <p>
+    The <em>formatX</em> library is used to format text output.
+    This document gives a short overview of the functionality.
+  </p>
+  <h4>Choose a format description</h4>
+  <select id="choose-format">
+    <option disabled selected>formatX: An Overview</option>
+    <option id="abs">Absolute value: abs</option>
+    <option id="exp">Number to power of e: exp</option>
+    <option id="int">Integer part: int</option>
+    <option id="log">Natural logarithm: log</option>
+    <option id="log2">Base 2 logarithm: log2</option>
+    <option id="log10">Base 10 logarithm: log10</option>
+    <option id="pow">Power function: pow</option>
+    <option id="round">Round value: round</option>
+    <option id="sqrt">Square root: sqrt</option>
+    <option id="add">Add two numbers: add</option>
+    <option id="sub">Subtract two numbers: sub</option>
+    <option id="mul">Multiply two numbers</option>
+    <option id="div">Divide two numbers: div</option>
+    <option id="mod">Modulo division: mod</option>
+    <option id="sqr">Square number: sqr</option>
+    <option id="eq">Test if equal: eq</option>
+    <option id="neq">Test if not equal: neq</option>
+    <option id="lt">Test if lower than: lt</option>
+    <option id="le">Test if lower equal: le</option>
+    <option id="gt">Test if greater than: gt</option>
+    <option id="ge">Test if greater equal: ge</option>
+    <option id="not">Negate value: not</option>
+    <option id="pop">Pop argument from stack</option>
+    <option id="plural">Test if plural: plural</option>
+    <option id="str">Convert number to string: str</option>
+    <option id="strb">Convert number to string with base: strb</option>
+    <option id="subs">Create substring: subs</option>
+    <option id="lc">Lowercase string: lc</option>
+    <option id="uc">Uppercase string: uc</option>
+    <option id="cap">Capitalize words: cap</option>
+    <option id="num">Create a number: num</option>
+    <option id="nan">Test for NaN: nan</option>
+    <option id="dtor">Convert degrees to radians: dtor</option>
+    <option id="rtod">Convert radians to degree: rtod</option>
+    <option id="mstod">Convert milliseconds to date: mstod</option>
+    <option id="dtoms">Convert date to ms: dtoms</option>
+    <option id="float">Convert to float value: float</option>
+    <option id="length">Calcalute the Cartesian length: length</option>
+    <option id="loc">Convert to locale: loc</option>
+    <option id="prec">Set the precision: prec</option>
+    <option id="fix">Set the number of decimal places: fix</option>
+    <option id="fract">Return the fractional part: fract</option>
+    <option id="mins">Convert to minutes: mins</option>
+    <option id="secs">Convert to seconds: secs</option>
+    <option id="sign">Get the sign: sign</option>
+    <option id="clip">Clip value to range: clip</option>
+    <option id="wrap">Wrap value within range: wrap</option>
+    <option id="rep">Repeat a number of times: rep</option>
+    <option id="at">Get property or array element: at</option>
+    <option id="right">Right align: right</option>
+    <option id="left">Left align: left</option>
+    <option id="ral">Right align to position: ral</option>
+    <option id="lal">Left align to position: lal</option>
+    <option id="sal">Align symbol to position: sal</option>
+    <option id="cal">Center value: cal</option>
+    <option id="deco">Decode character code: deco</option>
+    <option id="pi">Return the value of π: pi</option>
+    <option id="e">Return the value of e: e</option>
+    <option id="lfld">Left-align in field: lfld</option>
+    <option id="rfld">Right-align in field: rfld</option>
+    <option id="dms">Convert to degrees, minutes and seconds: dms</option>
+    <option id="lat">Convert to latitude: lat</option>
+    <option id="lon">Convert to longitude: lon</option>
+    <option id="latlon">Conver to geographic coordinates: latlon</option>
+    <option id="math.sin">Use Math.sin function: _Math.sin</option>
+    <option id="math.atan2">Use Math.atan2 function: _Math.atan2</option>
+  </select>
+  
+  <h4>Editable format description</h4>
+  <input id="format" class="text" type="text">
+  <h4>Resulting text output</h4>
+  <pre id="result" class="text"></pre>
+
+  <script>
+
+  var examples = {
+    abs: '#-5|_abs|>>',
+    exp: '#1|_exp|>>',
+    int: '#1.9|_int|>>',
+    log: '#1|_log|>>',
+    log2: '#8|_log2|>>',
+    log10: '#100|_log10|>>',
+    pow: '#2|#5|_pow|>>',
+    round: '#3.5|_round|>>',
+    sqrt: '#2|_sqrt|>>',
+    add: '#1|#2|#3|_add|_add|>>',
+    sub: '#1000|#1|_sub|>>',
+    mul: '#999|#1001|_mul|>>',
+    mod: '#9|#5|_mod|>>',
+    div: '#10|#3|_div|>>',
+    sqr: '#5|_sqr|>>',
+    eq: '#2|#2|_eq|>>',
+    neq: '#2|#2|_neq|>>',
+    lt: '#2|#2|_lt|>>',
+    le: '#2|#2|_le|>>',
+    gt: '#2|#2|_gt|>>',
+    ge: '#2|#2|_ge|>>',
+    not: '#0|_not|>>',
+    pop: '#1|#2|#3|_pop|>>',
+    plural: '#1|$$n|#3|$$m|$n|>>| dog|_plural|s::| and |$m|>>| cat|_plural|s::',
+    str: '#255|_str|>>',
+    strb: '#255|#16|_strb|>>',
+    subs: '&Hello|#1|#2|_subs|>>',
+    lc: '&ABCDEFGHIJKLMNOPQRSTUVWXYZ|_lc|>>',
+    uc: '&abcdefghijklmnopqrstuvwxyz|_uc|>>',
+    cap: "&a midsummer night's dream|_cap|>>",
+    num: '&0xff|_num|>>',
+    nan: '&string|_nan|>>',
+    dtor: '#360|_dtor|>>',
+    rtod: '#1|_rtod|>>',
+    mstod: '#1460764800000|_mstod|>>',
+    dtoms: '&2016-04-16T00:00:00|_dtoms|>>',
+    float: '&1.23456|_float|>>',
+    length: '#3|#4|_length|>>',
+    loc: '#123456.789|_loc|>>',
+    prec: '_pi|#5|_prec|>>',
+    fix: '_pi|#2|_fix|>>',
+    fract: '_pi|_fract|>>',
+    mins: '#10.1|$$deg|_int|>>|°|$deg|_mins|&00|_right|>>|\'',
+    secs: '#0.0173|$$deg|_int|>>|°|$deg|_mins|&00|_right|>>|\'|$deg|_secs|&00|_right|>>|"',
+    sign: '#10|_sign|#1|_add|minus::zero::plus',
+    clip: '#1.2|@[-1,1]|_clip|>>',
+    wrap: '#190|@[-180,180]|_wrap|>>',
+    rep: '&0123456789|#4|_rep|>>',
+    parse: '',
+    at: '@{"x":1,"y":2}|&y|_at|>>',
+    right: '#123|&*******|_right|>>',
+    left: '&John|&*******|_left|>>',
+    ral: '&*********|#123|#8|_ral|>>',
+    lal: '&*********|&TEXT|#1|_lal|>>',
+    sal: '&*********|#0.1|&.|#4|_sal|>>',
+    cal: '&************|&center|#6|_cal|>>',
+    deco: '&%7C%7C%7C|_deco|>>',
+    pi: '_pi|>>',
+    e: '_e|>>',
+    lfld: '&edcba|#10|_lfld|*|>>|*',
+    rfld: '#12345|#10|_rfld|*|>>|*',
+    dms: '#10.0173|_dms|>>',
+    lat: '#47.27055|_lat|>>',
+    lon: '#8.641388|_lon|>>',
+    latlon: '@[47.27055,8.641388]|_latlon|>>',
+    'math.sin': '#45|_dtor|_Math.sin|#6|_fix|>>',
+    'math.atan2': '#1|#-1|_Math.atan2|_rtod|>>'
+  }
+  
+  function $(selector) {
+    return document.querySelector(selector);
+  }
+  
+  function evaluate(format) {
+    var result = formatX(format)();
+    $('#result').textContent = result;
+  }
+  
+  $('#choose-format').addEventListener('change', function(evt) {
+    var format = examples[this[this.selectedIndex].id];
+    if (format) {
+      $('#format').value = format;
+      evaluate(format);
+    }
+  });
+  
+  $('#format').addEventListener('keyup', function(evt) {
+    if (evt.keyIdentifier == 'Enter') {
+      evaluate(this.value);
+    }
+  })
+
+  </script>
+  
+</body>
+</html>

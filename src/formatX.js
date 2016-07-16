@@ -9,6 +9,7 @@
   0.1.0 09/02/2016
   0.2.0 24/02/2016
   0.3.0 03/03/2016
+  0.4.0 16/04/2016 Macros added
 
   Usage
   1. Define a format string.
@@ -32,20 +33,26 @@
 
 (function(topLevel) {
 
-  "use strict";
+  const VERSION = '1.0.0';
+
 
   // Special characters
-  var sep = '|', // separates items
-      v_r = '$', // denotes variables
-      num = '#', // used for numbers
-      str = '&', // specifies strings
-      jsn = '@', // introduces a JSON expression
-      fun = '_', // functions start with an underbar
-      out = '>', // output the current value
-      com = '%'; // comment only
+  const SEP = '|', // separates items
+        VAR = '$', // denotes variables
+        NUM = '#', // used for numbers
+        STR = '&', // specifies strings
+        JSN = '@', // introduces a JSON expression
+        FUN = '_', // functions start with an underbar
+        OUT = '>', // output the current value
+        COM = '%'; // comment only
 
+  "use strict";
+
+  var _sep = SEP;
+  
   // Useful functions
   var functions = {
+    vers: function() { return VERSION },
     abs: Math.abs,
     exp: Math.exp,
     int: Math.trunc,
@@ -59,6 +66,7 @@
     sub: function(x, y) { return x - y },
     mul: function(x, y) { return x * y },
     div: function(x, y) { return x / y },
+    mod: function(x, y) { return x % y },
     sqr: function(x) { return x * x },
     eq: function(x, y) { return x == y ? 1 : 0 },
     neq: function(x, y) { return x != y ? 1 : 0 },
@@ -67,17 +75,24 @@
     gt: function(x, y) { return x > y ? 1 : 0 },
     ge: function(x, y) { return x >= y ? 1 : 0 },
     not: function(x) { return x ? 0 : 1 },
+    pop: function(x) {},
     plural: function(n) { return n > 1 ? 1 : 0 },
-    step: function(x, n) { return n * Math.trunc(x / n) },
     str: function(x) { return x.toString() },
     strb: function(x, b) { return x.toString(b) },
     subs: function(x, a, b) { return x.substr(a, b) },
+    lc: function(s) { return s.toLowerCase() },
+    uc: function(s) { return s.toUpperCase() },
+    cap: function(s) { return s.replace(/(\s|^)([a-z])/g, function(x) { return x.toUpperCase() }) },
     num: function(x) { return +x },
+    nan: function(x) { return isNaN(x) },
     dtor: function(x) { return x * Math.PI / 180 },
     rtod: function(x) { return x * 180 / Math.PI },
+    mstod: function(n) { return new Date(n) },
+    dtoms: function(d) { return Date.parse(d).valueOf() },
+    now: function() { return new Date() },
     float: function(s) { return parseFloat(s) },
     length: function(x, y) { return Math.sqrt(x * x + y * y) },
-    local: function(x) { return x.toLocaleString() },
+    loc: function(x) { return x.toLocaleString() },
     prec: function(x, p) { return x.toPrecision(p) },
     fix: function(x, p) { return x.toFixed(p) },
     fract: function(x) { return x - Math.trunc(x) },
@@ -86,63 +101,100 @@
     sign: function(x) { return Math.sign(x) },
     clip: function(x, r) { return x < r[0] ? r[0] : x > r[1] ? r[1] : x },
     wrap: function(x, r) { var d = r[1] - r[0]; while (x < r[0]) { x += d }; while (x > r[1]) { x -= d }; return x },
-    sum: function() { var args = Array.prototype.slice.call(arguments); return args.reduce(function(p, c) { return p + c }, 0) },
     rep: function(s, n) { return Array(n).fill(s).join('') },
-    array: function() { return Array.prototype.slice.call(arguments) },
-    parse: function(s) { return JSON.parse(s) },
     at: function(a, i) { return a[i] },
     right: function(x, t) { return ('' + t + x).slice(-t.length) },
     left: function(x, t) { return ('' + x + t).slice(0, t.length) },
+    ral: function(s, x, p) { x = x.toString(); return insertAt(s, x, p - x.length) },
+    lal: function(s, x, p) { return insertAt(s, x.toString(), p) },
+    sal: function(s, x, c, p) { x = x.toString(); var d = x.indexOf(c); p -= d >= 0 ? d : x.length; return insertAt(s, x, p) },
+    cal: function(s, x, p) { x = x.toString(); return insertAt(s, x, p - (x.length >> 1)) },
     deco: function(s) { return decodeURI(s) },
     pi: function() { return Math.PI },
-    e: function() { return Math.E }
+    e: function() { return Math.E },
+    lfld: function(x, n) { return macro('lfld')(x, n); },
+    rfld: function(x, n) { return macro('rfld')(x, n); },
+    dms: function(d) { return macro('dms')(d); },
+    lat: function(d) { return macro('lat')(d); },
+    lon: function(d) { return macro('lon')(d); },
+    latlon: function(ll) { return macro('latlon')(ll); }
   };
 
   // Add some aliases
-  var aliases = { add: '+', sub: '-', mul: '*', div: '/' };
+  var aliases = { add: '+', sub: '-', mul: '*', div: '/', mod: '%', eq: '==', ne: '!=', lt: '<', le: '<=', gt: '>', ge: '>=', pi: 'π' };
   Object.keys(aliases).forEach(function(key, i) {
     functions[aliases[key]] = functions[key];
   })
 
+  // Define some format macros
+  var formatMacros = {
+    lfld:   "$n_|$$x_|& |$n_|_rep|_left|>>",
+    rfld:   "$n_|$$x_|& |$n_|_rep|_right|>>",
+    dms:    "$$d_|_int|>>|°|$d_|_mins|&00|_right|>>|'|$d_|_secs|&00|_right|>>|\"",
+    lat:    "$$lat_|_abs|$$ad_|_int|@[-90,90]|_clip|&  |_right|>>|°|$ad_|_mins|&00|_right|>>|'|$ad_|_secs|&00|_right|>>|\"|$lat_|_sign|#1|_add|S:: ::N",
+    lon:    "$$lon_|_abs|$$ad_|_int|@[-180,180]|_wrap|&   |_right|>>|°|$ad_|_mins|&00|_right|>>|'|$ad_|_secs|&00|_right|>>|\"|$lon_|_sign|#1|_add|W:: ::E",
+    latlon: "$$ll_|#0|_at|_lat|>>|, |$ll_|#1|_at|_lon|>>",
+    error:  '&ERROR: function "|>>|$msg_|>>|&" not available!|>>'
+  };
+
+  // Macro function used to buffer parsed formats
+  var macro = (function(mfts) {
+    var mfuncs = {};
+    return function(name) {
+      var mfunc = mfuncs[name];
+      if (!mfunc) {
+        mfuncs[name] = mfunc = formatX(mfts[name]);
+      }
+      return mfunc;
+    }
+  })(formatMacros);
+
+
+  function insertAt(s0, s1, p) {
+    return s0.substr(0, p) + s1 + s0.substr(p + s1.length);
+  }
+
 
   var formatX = function(fmt) {
 
-    var ops;
+    var ops = [];
 
     function evaluate(expression) {  
       var properties = expression.split('.');
-      return properties.reduce(function(p, c) {
+      var result = properties.reduce(function(p, c) {
         return p ? p[c] : p;
       }, topLevel);
+      return result instanceof Function ? result : function() { return result };
     }
 
     // Parse the format specifier
     function parse() {
-      var toks = fmt.split(sep);
+      var toks = fmt.split(_sep);
+      _sep = SEP;
       var ops = toks.map(function(tok) {
         var op;
         var c = tok.charAt(0);
         switch (c) {
-        case v_r: // variable
-          op = { type: 'var', name: tok };
+        case VAR: // variable
+          op = tok[1] === '$' ? { type: 'nam', name: tok.substr(1) } : { type: 'var', name: tok };
           break;
-        case num: // number
+        case NUM: // number
           var f = parseFloat(tok.substr(1));
           op = { type: 'num', value: isNaN(f) ? evaluate(tok.substr(1)) : f };
           break;
-        case str: // string
+        case STR: // string
           op = { type: 'str', value: tok.substr(1) };
           break;
-        case jsn: // JSON
+        case JSN: // JSON
           op = { type: 'jsn', value: JSON.parse(tok.substr(1)) };
           break;
-        case fun: // function
+        case FUN: // function
           op = { type: 'fun', fun: tok.substr(1) };
           break;
-        case out: // output
+        case OUT: // output
           op = { type: 'out' };
           break;
-        case com: // comment
+        case COM: // comment
           op = { type: 'com', text: tok.substr(1) };
           break;  
         default: // label
@@ -178,7 +230,7 @@
           stack.push(arg);
         }
       });
-
+      
       return ops.reduce(function(p, c, i) {
         var out = '';
         switch (c.type) {
@@ -187,8 +239,11 @@
             stack.push(store[c.name]);
           }
           else {
-            store[c.name] = stack[stack.length - 1];
+            store[c.name] = stack.pop();
           }
+          break;
+        case 'nam':
+          store[c.name] = stack[stack.length - 1];
           break;
         case 'num':
         case 'str':
@@ -198,7 +253,7 @@
         case 'fun':
           var fun = functions[c.fun] || evaluate(c.fun);
           if (fun) {
-            var nargs = fun.length === undefined ? stack.length : fun.length;
+            var nargs = fun.length;
             var rv = fun.apply(fun, nargs == 0 ? null : stack.splice(-nargs));
             if (rv !== undefined) {
               stack.push(rv);
@@ -206,7 +261,7 @@
           }
           else {
             // On our own mission
-            throw (missingFunction(c.fun));
+            throw (macro('error')(c.fun));
           }
           break;
         case 'out':
@@ -227,17 +282,12 @@
 
     }
       
-    // Run immediately if there is more than 1 argument
-    if (arguments.length > 1) {
-      return format.apply(format, Array.prototype.slice.call(arguments, 1));
-    }
-
     return format;
   }
   
   // Set separator
   formatX.setSeparator = function(_) {
-    sep = _;
+    _sep = _;
   }
 
   // Add a new function
@@ -250,7 +300,7 @@
     var args = Array.prototype.slice.call(arguments);
     var fun = functions[name.substr(1)];
     if (fun) { return fun.apply(fun, args.splice(1 - args.length)); }
-    else { console.error(missingFunction(name)); }
+    else { console.error(macro('error')(ll)(name)); }
   }
 
 
@@ -260,7 +310,5 @@
   else {
     topLevel.formatX = formatX;
   }
-  
-  var missingFunction = formatX('&ERROR: function "|>>|$msg|>>|&" not available!|>>');
-  
+    
 })(typeof window === "undefined" ? global : window);

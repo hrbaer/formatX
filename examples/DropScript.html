@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DropScript</title>
+  <style>
+    body {
+      font-family: "HelveticaNeue", sans-serif;
+      margin: 50px;
+    }
+    #dropScript {
+      padding: 30px;
+      display: flex;
+      border-width: 4px;
+      border-style: dotted;
+      border-color: #ddd;
+      border-radius: 35px;
+    }
+    .center {
+      font-size: 30pt;
+      color: #ddd;
+      margin: auto;  /* Magic! */
+      pointer-events: none;
+    }
+    .hilite {
+      background: #f8f8f8;
+    }
+    #source {
+      color: #aaa;
+    }
+    #result {
+      color: #d00;
+    }
+    #file {
+      font-size: 10pt;
+    }
+    #filename {
+      font-weight: bold;
+    }
+    .head {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 220px;
+      padding: 20px 40px 0px 40px;
+    }
+    .main {
+      position: absolute;
+      top: 240px;
+      bottom: 25px;
+      left: 0;
+      right: 0;
+      padding: 0px 40px 0px 40px;
+      overflow: scroll;
+    }
+    .foot {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 4px 10px 5px 10px;
+      font-size: 9pt;
+      border-top: 1px solid #ddd;
+      color: #777;
+      background: #eee;
+    }
+  </style>
+
+</head>
+<body>
+  <div class="head">
+    <h1>DropScript</h1>
+    <div id="dropScript"><div class="center">Drop your script here!</div></div>
+  </div>
+  <div class="main">
+    <h2>Results</h2>
+    <pre id="result"></pre>
+    <h2>Script Source</h2>
+    <p style="display:none" id="file">File name: <span id="filename">?</span>, file size: <span id="filesize">?</span> bytes, last modified: <span id="modified">?</span></p>
+    <pre id="source"></pre>
+  </div>
+  <div id="copy" class="foot">
+    ©2016 DropScript by H. R. Baer, hbaer@ethz.ch
+  </div>
+  <script>
+
+    // "use strict";
+    
+    var required = {};
+
+    // Redirect log data.
+    var oldLog = console.log;
+    console.log = function () {
+      var message = Array.prototype.slice.call(arguments).join(' ');
+      document.getElementById('result').textContent += message + '\n';
+      // oldLog.apply(console, arguments);
+    };
+
+
+    /*
+     * Report error messages.
+     */
+    window.addEventListener('error', function(error) {
+      console.log('ERROR MESSAGE:', error.message);
+      console.log('LINE:', error.lineno);
+      console.log('COLUMN:', error.colno);
+    });
+
+
+    /*
+     * Require called by your script.
+     */
+    function require(src) {
+       if (!required[src]) {
+        required[src] = true;
+        var script = document.createElement('script');
+        script.addEventListener('load', function(e) {
+          scriptRunner();
+          document.body.removeChild(script);
+        })
+        script.src = src;
+        document.body.appendChild(script);
+      }
+      return window;
+    }
+
+
+    // Function object to create leading-zero numbers
+    function Format(template) {
+      return function(x) {
+        return (template + x).slice(-template.length);
+      }
+    }
+    var format = Format('0000');
+
+    var dropScript = document.getElementById('dropScript');
+    dropScript.focus();
+
+    dropScript.addEventListener('dragover', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+    });
+
+    dropScript.addEventListener('dragenter', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      document.getElementById('dropScript').classList.add('hilite');
+    });
+
+    dropScript.addEventListener('dragleave', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      document.getElementById('dropScript').classList.remove('hilite');
+    });
+
+    dropScript.addEventListener('paste', function(e) {
+      if (e.clipboardData.types.indexOf('text/plain') > -1) {
+        runScript(e.clipboardData.getData('text/plain'));
+        e.preventDefault();
+      }
+    });
+
+
+    function createScriptRunner(source) {
+      return function() {
+        runScript(source);
+      }
+    }
+    var scriptRunner;
+
+
+    /*
+     * Run the previously loaded script.
+     */
+    function runScript(source) {
+      // Print the source and add a line number
+      document.getElementById('result').textContent = '';
+      var sourceLines = source.split('\n').map(function(line, i) {
+        return format(i + 1) + '   ' + line;
+      });
+      document.getElementById('source').textContent = sourceLines.join('\n');
+  
+      var script = document.createElement('script');
+      script.text = source;
+  
+      document.body.appendChild(script);
+      document.body.removeChild(script);
+  
+      document.getElementById('dropScript').classList.remove('hilite');
+    }
+
+
+    /*
+     * Get file data either on drop or on copy/paste.
+     */
+    dropScript.addEventListener('drop', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      document.querySelector('div.main').scrollTop = 0;
+      var files = e.dataTransfer.files;
+      if (files.length > 0) {
+        for (var i = 0, file; file = files[i]; i++) {
+          if (file.type.match(/javascript/)) {
+            document.getElementById('filename').textContent = file.name;
+            document.getElementById('filesize').textContent = file.size;
+            document.getElementById('modified').textContent = file.lastModifiedDate;
+            document.getElementById('file').style.cssText = 'display:block';
+            document.querySelector('title').textContent = 'DropScript | ' + file.name
+            var reader = new FileReader();
+            reader.onload = function(e) {
+              scriptRunner = createScriptRunner(e.target.result);
+              scriptRunner();
+            }
+            reader.readAsText(file);
+          }
+          else {
+            alert('Type "' + file.type + '" not supported!');
+          }
+        }
+      }
+      else {
+        var source = e.dataTransfer.getData('text');
+        if (source) {
+          scriptRunner = createScriptRunner(source);
+          scriptRunner();
+        }
+      }
+    });
+
+  </script>
+</body>
+</html>
