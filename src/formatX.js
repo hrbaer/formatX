@@ -10,6 +10,7 @@
   0.2.0 24/02/2016
   0.3.0 03/03/2016
   0.4.0 16/04/2016 Macros added
+  1.0.0 27/07/2016
 
   Usage
   1. Define a format string.
@@ -49,7 +50,7 @@
   "use strict";
 
   var _sep = SEP;
-  
+
   // Useful functions
   var functions = {
     vers: function() { return VERSION },
@@ -83,6 +84,7 @@
     lc: function(s) { return s.toLowerCase() },
     uc: function(s) { return s.toUpperCase() },
     cap: function(s) { return s.replace(/(\s|^)([a-z])/g, function(x) { return x.toUpperCase() }) },
+    json: function(x) { return JSON.stringify(x) },
     num: function(x) { return +x },
     nan: function(x) { return isNaN(x) },
     dtor: function(x) { return x * Math.PI / 180 },
@@ -159,7 +161,7 @@
 
     var ops = [];
 
-    function evaluate(expression) {  
+    function evaluate(expression) {
       var properties = expression.split('.');
       var result = properties.reduce(function(p, c) {
         return p ? p[c] : p;
@@ -196,7 +198,7 @@
           break;
         case COM: // comment
           op = { type: 'com', text: tok.substr(1) };
-          break;  
+          break;
         default: // label
           op = { type: 'lab', labs: tok.split('::') };
           break;
@@ -206,9 +208,9 @@
       return ops;
     };
     if (fmt) { ops = parse() };
-  
+
     var format = function() {
-      
+
       var args = Array.prototype.slice.call(arguments);
       var stack = []; // holds the currently used values
       var store = {}; // stores named variables
@@ -230,7 +232,7 @@
           stack.push(arg);
         }
       });
-      
+
       return ops.reduce(function(p, c, i) {
         var out = '';
         switch (c.type) {
@@ -281,10 +283,10 @@
       }, '');
 
     }
-      
+
     return format;
   }
-  
+
   // Set separator
   formatX.setSeparator = function(_) {
     _sep = _;
@@ -310,5 +312,5 @@
   else {
     topLevel.formatX = formatX;
   }
-    
+
 })(typeof window === "undefined" ? global : window);

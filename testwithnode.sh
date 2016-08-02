@@ -2,7 +2,10 @@
 
 for file in examples/*.js
 do
-  echo "$file"
-  node "$file"
   echo
+  echo "$file"
+  echo
+  node "$file"
+  echo '________________________________________________________________________________'
 done
+echo

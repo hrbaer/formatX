@@ -1,7 +1,7 @@
 var X = require('../src/formatX.js');
 var R = require('./itor.js');
 
-// When using DropScript, do not forget to drop the itor library first!
+// Add the external function.
 X.formatX.setFunction('_itor', R.itor());
 
 var fmt = "$i|$i|&    |_right|>>| |$i|_itor|>>";

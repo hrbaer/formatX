@@ -62,6 +62,7 @@
     <option id="lc">Lowercase string: lc</option>
     <option id="uc">Uppercase string: uc</option>
     <option id="cap">Capitalize words: cap</option>
+    <option id="json">Convert object to string: json</option>
     <option id="num">Create a number: num</option>
     <option id="nan">Test for NaN: nan</option>
     <option id="dtor">Convert degrees to radians: dtor</option>
@@ -75,12 +76,12 @@
     <option id="fix">Set the number of decimal places: fix</option>
     <option id="fract">Return the fractional part: fract</option>
     <option id="mins">Convert to minutes: mins</option>
-    <option id="secs">Convert to seconds: secs</option>
+    <option id="secs">Convert to minutes and seconds: secs</option>
     <option id="sign">Get the sign: sign</option>
     <option id="clip">Clip value to range: clip</option>
     <option id="wrap">Wrap value within range: wrap</option>
     <option id="rep">Repeat a number of times: rep</option>
-    <option id="at">Get property or array element: at</option>
+    <option id="at">Get value of object property: at</option>
     <option id="right">Right align: right</option>
     <option id="left">Left align: left</option>
     <option id="ral">Right align to position: ral</option>
@@ -95,11 +96,12 @@
     <option id="dms">Convert to degrees, minutes and seconds: dms</option>
     <option id="lat">Convert to latitude: lat</option>
     <option id="lon">Convert to longitude: lon</option>
-    <option id="latlon">Conver to geographic coordinates: latlon</option>
+    <option id="latlon">Convert to geographic coordinates: latlon</option>
     <option id="math.sin">Use Math.sin function: _Math.sin</option>
     <option id="math.atan2">Use Math.atan2 function: _Math.atan2</option>
+    <option id="comment">This is a comment: %</option>
   </select>
-  
+
   <h4>Editable format description</h4>
   <input id="format" class="text" type="text">
   <h4>Resulting text output</h4>
@@ -138,6 +140,7 @@
     lc: '&ABCDEFGHIJKLMNOPQRSTUVWXYZ|_lc|>>',
     uc: '&abcdefghijklmnopqrstuvwxyz|_uc|>>',
     cap: "&a midsummer night's dream|_cap|>>",
+    json: '@{"a":1,"b":2}|_json|>>',
     num: '&0xff|_num|>>',
     nan: '&string|_nan|>>',
     dtor: '#360|_dtor|>>',
@@ -174,18 +177,19 @@
     lon: '#8.641388|_lon|>>',
     latlon: '@[47.27055,8.641388]|_latlon|>>',
     'math.sin': '#45|_dtor|_Math.sin|#6|_fix|>>',
-    'math.atan2': '#1|#-1|_Math.atan2|_rtod|>>'
+    'math.atan2': '#1|#-1|_Math.atan2|_rtod|>>',
+    comment: '%This is a comment|[no output]'
   }
-  
+
   function $(selector) {
     return document.querySelector(selector);
   }
-  
+
   function evaluate(format) {
     var result = formatX(format)();
     $('#result').textContent = result;
   }
-  
+
   $('#choose-format').addEventListener('change', function(evt) {
     var format = examples[this[this.selectedIndex].id];
     if (format) {
@@ -193,7 +197,7 @@
       evaluate(format);
     }
   });
-  
+
   $('#format').addEventListener('keyup', function(evt) {
     if (evt.keyIdentifier == 'Enter') {
       evaluate(this.value);
@@ -201,6 +205,6 @@
   })
 
   </script>
-  
+
 </body>
 </html>

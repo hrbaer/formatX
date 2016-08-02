@@ -12,7 +12,6 @@ var fmtLat = X.formatX(latFmt);
 
 var fmtPer = X.formatX("$time|$$text|>>|$time|#3|_fix|>>| ms");
 
-
 function showPerformance(text, time) {
   console.log(fmtPer(text, time));
 }
