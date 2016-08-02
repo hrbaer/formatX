@@ -15,4 +15,4 @@
   3. Call the format function with any number of unnamed and named arguments.
      A named argument is defined by the following object: { name: &lt;name&gt;, value: &lt;value&gt; }
 
-  See [Formatted Output](http://www.ursamedia.ch/computics/index.php/2016/08/01/formatted-output/) for a discussion of the topic.
+See [Formatted Output](http://www.ursamedia.ch/computics/index.php/2016/08/01/formatted-output/) for a discussion of the topic.
