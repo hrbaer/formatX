@@ -11,6 +11,8 @@
   0.3.0 03/03/2016
   0.4.0 16/04/2016 Macros added
   1.0.0 27/07/2016
+  1.1.0 12/08/2016 Simplified element and property access
+  1.1.1 14/08/2016 Simplified evaluate function
 
   Usage
   1. Define a format string.
@@ -30,11 +32,13 @@
 
   Comments
   - You might also use _<Functionname> such as _Math.sin (this expression will be eval-uated)
+  - Accessing array elements and object properties by dot operator or square brackets: $x.y[1]
+  - No operator for labels using '\\'
 */
 
 (function(topLevel) {
 
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.1';
 
 
   // Special characters
@@ -161,13 +165,15 @@
 
     var ops = [];
 
-    function evaluate(expression) {
-      var properties = expression.split('.');
-      var result = properties.reduce(function(p, c) {
-        return p ? p[c] : p;
-      }, topLevel);
-      return result instanceof Function ? result : function() { return result };
+    function evaluate(expression, param) {
+      if (param !== undefined) {
+        return new Function(param, 'return ' + expression);
+      }
+      var f = new Function('return ' + expression);
+      var ff = f();
+      return ff instanceof Function ? ff : f;
     }
+
 
     // Parse the format specifier
     function parse() {
@@ -178,7 +184,16 @@
         var c = tok.charAt(0);
         switch (c) {
         case VAR: // variable
-          op = tok[1] === '$' ? { type: 'nam', name: tok.substr(1) } : { type: 'var', name: tok };
+          var type = tok[1] === '$' ? 'nam' : 'var';
+          var name = tok[1] === '$' ? tok.substr(1) : tok;
+          op = { type: type, name: name };
+          var p1 = name.indexOf('.');
+          var p2 = name.indexOf('[');
+          if (p1 > 0 || p2 > 0) {
+            var p0 = Math.min(p1 < 0 ? p2 : p1, p2 < 0 ? p1 : p2);
+            op.name = name.substr(0, p0);
+            op.expr = evaluate(name, op.name);
+          }
           break;
         case NUM: // number
           var f = parseFloat(tok.substr(1));
@@ -200,6 +215,7 @@
           op = { type: 'com', text: tok.substr(1) };
           break;
         default: // label
+          tok = tok.charAt(0) === '\\' ? tok.substr(1) : tok;
           op = { type: 'lab', labs: tok.split('::') };
           break;
         }
@@ -238,7 +254,8 @@
         switch (c.type) {
         case 'var':
           if (store[c.name] !== undefined) {
-            stack.push(store[c.name]);
+            var v = store[c.name];
+            stack.push(c.expr ? c.expr(v) : v);
           }
           else {
             store[c.name] = stack.pop();

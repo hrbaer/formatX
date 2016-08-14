@@ -99,6 +99,7 @@
     <option id="latlon">Convert to geographic coordinates: latlon</option>
     <option id="math.sin">Use Math.sin function: _Math.sin</option>
     <option id="math.atan2">Use Math.atan2 function: _Math.atan2</option>
+    <option id="deref">Dereference object values: [] or .</option>
     <option id="comment">This is a comment: %</option>
   </select>
 
@@ -178,6 +179,7 @@
     latlon: '@[47.27055,8.641388]|_latlon|>>',
     'math.sin': '#45|_dtor|_Math.sin|#6|_fix|>>',
     'math.atan2': '#1|#-1|_Math.atan2|_rtod|>>',
+    deref: '@{"x": ["A"]}|$obj|$obj.x[0]|>>',
     comment: '%This is a comment|[no output]'
   }
 
