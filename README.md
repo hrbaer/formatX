@@ -5,7 +5,7 @@
   1. Define a format string.
      * | A Separator for items, such as values, variables, labels and functions
      * $ Prefix used to specify a variable of your choice
-     * # Prefix used to denote a number
+     * \# Prefix used to denote a number
      * & Prefix for a string
      * _ Function prefix
      * > Output of the current value
