@@ -146,13 +146,13 @@
     dropScript.addEventListener('dragenter', function(e) {
       e.stopPropagation();
       e.preventDefault();
-      document.getElementById('dropScript').classList.add('hilite');
+      this.classList.add('hilite');
     });
 
     dropScript.addEventListener('dragleave', function(e) {
       e.stopPropagation();
       e.preventDefault();
-      document.getElementById('dropScript').classList.remove('hilite');
+      this.classList.remove('hilite');
     });
 
     dropScript.addEventListener('paste', function(e) {
@@ -187,8 +187,6 @@
   
       document.body.appendChild(script);
       document.body.removeChild(script);
-  
-      document.getElementById('dropScript').classList.remove('hilite');
     }
 
 
@@ -198,6 +196,9 @@
     dropScript.addEventListener('drop', function(e) {
       e.stopPropagation();
       e.preventDefault();
+
+      dropScript.classList.remove('hilite');
+
       document.querySelector('div.main').scrollTop = 0;
       var files = e.dataTransfer.files;
       if (files.length > 0) {

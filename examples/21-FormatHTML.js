@@ -6,7 +6,7 @@ else {
   var X = require('../src/formatX.js');
   
   // HTML formatting - Reload DropScript to remove the result.
-  // Tnis will not run with Node.js.
+  // This will not run with Node.js.
   var fmt = `$$h|%
   -------------------------------------------------|%
   -- Hours ----|_int|>>|<sup>h</sup>|%
